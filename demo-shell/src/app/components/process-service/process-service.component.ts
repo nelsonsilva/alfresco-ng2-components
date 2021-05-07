@@ -570,4 +570,16 @@ export class ProcessServiceComponent implements AfterViewInit, OnDestroy, OnInit
             }
         ];
     }
+
+    getTaskStatus(taskDetails: any): string {
+        return taskDetails && taskDetails.isCompleted() ? 'Completed' : 'Running';
+    }
+
+    getTaskListSchema(): string {
+        return this.isCompletedFilter() ? 'completed' : 'default';
+    }
+
+    isCompletedFilter(): boolean {
+        return this.taskFilter.name === 'Completed Tasks';
+    }
 }

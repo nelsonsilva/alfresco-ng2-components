@@ -39,7 +39,7 @@
                      *ngIf="taskFilter && !isStartTaskMode()">
                     <adf-tasklist
                         [appId]="taskFilter?.appId"
-                        [presetColumn]="presetColumn"
+                        [presetColumn]="getTaskListSchema()"
                         [page]="taskPage"
                         [size]="paginationPageSize"
                         [selectionMode]="selectionMode"
@@ -62,6 +62,31 @@
                             <data-column key="name" title="{{'ADF_TASK_LIST.PROPERTIES.NAME' | translate}}" class="app-full-width name-column"></data-column>
                             <data-column key="created" title="{{'ADF_TASK_LIST.PROPERTIES.CREATED' | translate}}" class="app-hidden"></data-column>
                         </data-columns> -->
+
+                        <data-columns>
+                            <data-column key="status" type="text" title="ADF_TASK_LIST.PROPERTIES.STATUS" [sortable]="false">
+                                <ng-template let-entry="$implicit">
+                                    <div title="{{getTaskStatus(entry.row.obj)}}">{{getTaskStatus(entry.row.obj)}}</div>
+                                </ng-template>
+                            </data-column>
+                            <data-column
+                                key="assignee"
+                                type="text"
+                                [sortable]="false"
+                                title="ADF_TASK_LIST.PROPERTIES.ASSIGNEE"
+                                class="desktop-only adf-no-grow-cell adf-data-table-cell--ellipsis"
+                            >
+                                <ng-template let-entry="$implicit">
+                                    <div
+                                        title="{{
+                                            entry.row.obj.assignee | fullName
+                                        }}"
+                                    >
+                                        {{ entry.row.obj.assignee | fullName }}
+                                    </div>
+                                </ng-template>
+                            </data-column>
+                        </data-columns>
 
                     </adf-tasklist>
 
