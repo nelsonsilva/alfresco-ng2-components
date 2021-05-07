@@ -852,6 +852,69 @@
           "title": "ADF_TASK_LIST.PROPERTIES.NAME",
           "sortable": true
         }
+      ],
+      "completed": [
+        {
+          "key": "name",
+          "type": "text",
+          "title": "ADF_TASK_LIST.PROPERTIES.NAME",
+          "class": "adf-ellipsis-cell adf-expand-cell-5",
+          "sortable": true,
+          "desktopOnly": false
+        },
+        {
+          "key": "created",
+          "type": "date",
+          "title": "ADF_TASK_LIST.PROPERTIES.CREATED",
+          "class": "adf-ellipsis-cell",
+          "sortable": true,
+          "desktopOnly": true
+        },
+        {
+          "key": "priority",
+          "type": "text",
+          "title": "ADF_TASK_LIST.PROPERTIES.PRIORITY",
+          "cssClass": "desktop-only",
+          "class": "adf-no-grow-cell adf-ellipsis-cell",
+          "sortable": true,
+          "desktopOnly": true
+        }
+      ],
+      "aps-process-task-list": [
+        {
+          "key": "name",
+          "type": "text",
+          "title": "ADF_TASK_LIST.PROPERTIES.NAME",
+          "class": "adf-ellipsis-cell adf-expand-cell-5",
+          "sortable": true,
+          "desktopOnly": false
+        },
+        {
+          "key": "dueDate",
+          "type": "date",
+          "title": "ADF_TASK_LIST.PROPERTIES.DUE_DATE",
+          "class": "adf-ellipsis-cell",
+          "format": "timeAgo",
+          "sortable": true,
+          "desktopOnly": true
+        },
+        {
+          "key": "created",
+          "type": "date",
+          "title": "ADF_TASK_LIST.PROPERTIES.CREATED",
+          "class": "adf-ellipsis-cell",
+          "sortable": true,
+          "desktopOnly": true
+        },
+        {
+          "key": "priority",
+          "type": "text",
+          "title": "ADF_TASK_LIST.PROPERTIES.PRIORITY",
+          "cssClass": "desktop-only",
+          "class": "adf-no-grow-cell adf-ellipsis-cell",
+          "sortable": true,
+          "desktopOnly": true
+        }
       ]
     }
   },
