@@ -17,7 +17,6 @@
 
 export * from './identity/public-api';
 export * from './api.service';
-export * from './rest.api.service';
 export * from './drop.actions';
 export * from './users.actions';
 export * from './api';
