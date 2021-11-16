@@ -24,37 +24,7 @@ import { concatMap, switchMap, takeWhile, map } from 'rxjs/operators';
 @Injectable({
     providedIn: 'root'
 })
-export class RenditionsService {
-
-    _renditionsApi: RenditionsApi;
-    get renditionsApi(): RenditionsApi {
-        this._renditionsApi = this._renditionsApi ?? new RenditionsApi(this.apiService.getInstance());
-        return this._renditionsApi;
-    }
-
-    _contentApi: ContentApi;
-    get contentApi(): ContentApi {
-        this._contentApi = this._contentApi ?? new ContentApi(this.apiService.getInstance());
-        return this._contentApi;
-    }
-
-    constructor(private apiService: AlfrescoApiService) {
-    }
-
-    /**
-     * Gets the first available rendition found for a node.
-     * @param nodeId ID of the target node
-     * @returns Information object for the rendition
-     */
-    getAvailableRenditionForNode(nodeId: string): Observable<RenditionEntry> {
-        return from(this.renditionsApi.listRenditions(nodeId)).pipe(
-            map((availableRenditions: RenditionPaging) => {
-                const renditionsAvailable: RenditionEntry[] = availableRenditions.list.entries.filter(
-                    (rendition) => (rendition.entry.id === 'pdf' || rendition.entry.id === 'imgpreview'));
-                const existingRendition = renditionsAvailable.find((rend) => rend.entry.status === 'CREATED');
-                return existingRendition ? existingRendition : renditionsAvailable[0];
-            }));
-    }
+export abstract class RenditionsService {
 
     /**
      * Generates a rendition for a node using the first available encoding.
@@ -65,7 +35,7 @@ export class RenditionsService {
         return this.getAvailableRenditionForNode(nodeId).pipe(
             map((rendition: RenditionEntry) => {
                 if (rendition.entry.status !== 'CREATED') {
-                    return from(this.renditionsApi.createRendition(nodeId, { id: rendition.entry.id }));
+                    return this.createRendition(nodeId, rendition.entry.id);
                 } else {
                     return empty();
                 }
@@ -120,14 +90,38 @@ export class RenditionsService {
     }
 
     /**
+     * Gets the first available rendition found for a node.
+     * @param nodeId ID of the target node
+     * @returns Information object for the rendition
+     */
+    getAvailableRenditionForNode(nodeId: string): Observable<RenditionEntry> {
+        return this.listRenditions(nodeId).pipe(
+            map((availableRenditions: RenditionPaging) => {
+                const renditionsAvailable: RenditionEntry[] = availableRenditions.list.entries.filter(
+                    (rendition) => (rendition.entry.id === 'pdf' || rendition.entry.id === 'imgpreview'));
+                const existingRendition = renditionsAvailable.find((rend) => rend.entry.status === 'CREATED');
+                return existingRendition ? existingRendition : renditionsAvailable[0];
+            }));
+    }
+
+    abstract listRenditions(nodeId: string): Observable<RenditionPaging>;
+
+    /**
      * Gets a URL linking to the specified rendition of a node.
      * @param nodeId ID of the target node
      * @param encoding Name of the rendition encoding
      * @returns URL string
      */
-    getRenditionUrl(nodeId: string, encoding: string): string {
-        return this.contentApi.getRenditionUrl(nodeId, encoding);
-    }
+    abstract getRenditionUrl(nodeId: string, encoding: string): string;
+
+    /**
+     * Gets a URL linking to the specified rendition of a node.
+     * @param nodeId ID of the target node
+     * @param versionId ID of the version
+     * @param encoding Name of the rendition encoding
+     * @returns URL string
+     */
+     abstract getVersionRenditionUrl(nodeId: string, versionId: string, encoding: string): string;
 
     /**
      * Gets information about a rendition of a node.
@@ -135,18 +129,14 @@ export class RenditionsService {
      * @param encoding Name of the rendition encoding
      * @returns Information object about the rendition
      */
-    getRendition(nodeId: string, encoding: string): Observable<RenditionEntry> {
-        return from(this.renditionsApi.getRendition(nodeId, encoding));
-    }
+    abstract getRendition(nodeId: string, encoding: string): Observable<RenditionEntry>;
 
     /**
      * Gets a list of all renditions for a node.
      * @param nodeId ID of the target node
      * @returns Paged list of rendition details
      */
-    getRenditionsListByNodeId(nodeId: string): Observable<RenditionPaging> {
-        return from(this.renditionsApi.listRenditions(nodeId));
-    }
+    abstract getRenditionsListByNodeId(nodeId: string): Observable<RenditionPaging>;
 
     /**
      * Creates a rendition for a node.
@@ -154,9 +144,7 @@ export class RenditionsService {
      * @param encoding Name of the rendition encoding
      * @returns Null response to indicate completion
      */
-    createRendition(nodeId: string, encoding: string): Observable<{}> {
-        return from(this.renditionsApi.createRendition(nodeId, { id: encoding }));
-    }
+    abstract createRendition(nodeId: string, encoding: string): Observable<{}>;
 
     /**
      * Repeatedly attempts to create a rendition, through to success or failure.
@@ -166,7 +154,53 @@ export class RenditionsService {
      * @param retries Number of attempts to make before declaring failure
      * @returns True if the rendition was created, false otherwise
      */
-    convert(nodeId: string, encoding: string, pollingInterval: number = 1000, retries: number = 5) {
+    abstract convert(nodeId: string, encoding: string, pollingInterval: number, retries: number);
+}
+
+@Injectable()
+export class RenditionsServiceImpl extends RenditionsService {
+
+    _renditionsApi: RenditionsApi;
+    get renditionsApi(): RenditionsApi {
+        this._renditionsApi = this._renditionsApi ?? new RenditionsApi(this.apiService.getInstance());
+        return this._renditionsApi;
+    }
+
+    _contentApi: ContentApi;
+    get contentApi(): ContentApi {
+        this._contentApi = this._contentApi ?? new ContentApi(this.apiService.getInstance());
+        return this._contentApi;
+    }
+
+    constructor(private apiService: AlfrescoApiService) {
+        super();
+    }
+
+    listRenditions(nodeId: string): Observable<RenditionPaging> {
+        return from(this.renditionsApi.listRenditions(nodeId));
+    }
+
+    getRenditionUrl(nodeId: string, encoding: string): string {
+        return this.contentApi.getRenditionUrl(nodeId, encoding);
+    }
+
+    getVersionRenditionUrl(nodeId: string, versionId: string, encoding: string): string {
+        return this.contentApi.getVersionRenditionUrl(nodeId, versionId, encoding);
+    }
+
+    getRendition(nodeId: string, encoding: string): Observable<RenditionEntry> {
+        return from(this.renditionsApi.getRendition(nodeId, encoding));
+    }
+
+    getRenditionsListByNodeId(nodeId: string): Observable<RenditionPaging> {
+        return from(this.renditionsApi.listRenditions(nodeId));
+    }
+
+     createRendition(nodeId: string, encoding: string): Observable<{}> {
+        return from(this.renditionsApi.createRendition(nodeId, { id: encoding }));
+    }
+
+     convert(nodeId: string, encoding: string, pollingInterval: number = 1000, retries: number = 5) {
         return this.createRendition(nodeId, encoding)
             .pipe(
                 concatMap(() => this.pollRendition(nodeId, encoding, pollingInterval, retries))

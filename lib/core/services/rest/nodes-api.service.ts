@@ -18,10 +18,11 @@
 import { Injectable } from '@angular/core';
 import { DirectAccessUrlEntry, MinimalNode, NodeEntry, NodePaging, NodesApi, TrashcanApi } from '@alfresco/js-api';
 import { from, Observable, throwError } from 'rxjs';
+import { AlfrescoApiService } from '../alfresco-api.service';
+import { UserPreferencesService } from '../user-preferences.service';
 import { catchError, map } from 'rxjs/operators';
-import { AlfrescoApiService } from './alfresco-api.service';
-import { UserPreferencesService } from './user-preferences.service';
-import { NodeMetadata } from '../models/node-metadata.model';
+import { NodeMetadata } from '../../models/node-metadata.model';
+import { NodesApiService } from '../nodes-api.service';
 
 @Injectable()
 export class NodesApiServiceImpl implements NodesApiService {
@@ -42,11 +43,26 @@ export class NodesApiServiceImpl implements NodesApiService {
                 private preferences: UserPreferencesService) {
     }
 
+    /**
+     * Copy a node to destination node
+     *
+     * @param nodeId The id of the node to be copied
+     * @param targetParentId The id of the folder-node where the node have to be copied to
+     * @param name The new name for the copy that would be added on the destination folder
+     * @param opts Api options
+     */
     copyNode(nodeId: string, targetParentId: string, name?: string, opts?: { include?: Array<string>; fields?: Array<string> }): Observable<NodeEntry> {
         return from(this.nodesApi.copyNode(nodeId, { targetParentId, name }, opts));
     }
 
-    moveNode(nodeId: string, targetParentId: string): Observable<NodeEntry> {
+    /**
+     * Moves a node to destination node.
+     *
+     * @param nodeId The id of the node to be moved
+     * @param targetParentId The id of the folder where the node will be moved
+     * @returns NodeEntry for the moved node
+     */
+     moveNode(nodeId: string, targetParentId: string): Observable<NodeEntry> {
         return from(this.nodesApi.moveNode(nodeId, { targetParentId }));
     }
 
@@ -71,6 +87,12 @@ export class NodesApiServiceImpl implements NodesApiService {
         return from(this.nodesApi.getNode(nodeId, queryOptions));
     }
 
+    /**
+     * Gets the stored information about a node.
+     * @param nodeId ID of the target node
+     * @param options Optional parameters supported by JS-API
+     * @returns Node information
+     */
     getNode(nodeId: string, options: any = {}): Observable<MinimalNode> {
         const defaults = {
             include: ['path', 'properties', 'allowableOperations', 'permissions']
@@ -83,6 +105,12 @@ export class NodesApiServiceImpl implements NodesApiService {
         );
     }
 
+    /**
+     * Gets the items contained in a folder node.
+     * @param nodeId ID of the target node
+     * @param options Optional parameters supported by JS-API
+     * @returns List of child items from the folder
+     */
     getNodeChildren(nodeId: string, options: any = {}): Observable<NodePaging> {
         const defaults = {
             maxItems: this.preferences.paginationSize,
@@ -96,6 +124,13 @@ export class NodesApiServiceImpl implements NodesApiService {
         );
     }
 
+    /**
+     * Creates a new document node inside a folder.
+     * @param parentNodeId ID of the parent folder node
+     * @param nodeBody Data for the new node
+     * @param options Optional parameters supported by JS-API
+     * @returns Details of the new node
+     */
     createNode(parentNodeId: string, nodeBody: any, options: any = {}): Observable<MinimalNode> {
         return from(this.nodesApi.createNode(parentNodeId, nodeBody, options)).pipe(
             map(this.getEntryFromEntity),
@@ -103,11 +138,25 @@ export class NodesApiServiceImpl implements NodesApiService {
         );
     }
 
+    /**
+     * Creates a new folder node inside a parent folder.
+     * @param parentNodeId ID of the parent folder node
+     * @param nodeBody Data for the new folder
+     * @param options Optional parameters supported by JS-API
+     * @returns Details of the new folder
+     */
     createFolder(parentNodeId: string, nodeBody: any, options: any = {}): Observable<MinimalNode> {
         const body = Object.assign({ nodeType: 'cm:folder' }, nodeBody);
         return this.createNode(parentNodeId, body, options);
     }
 
+    /**
+     * Updates the information about a node.
+     * @param nodeId ID of the target node
+     * @param nodeBody New data for the node
+     * @param options Optional parameters supported by JS-API
+     * @returns Updated node information
+     */
     updateNode(nodeId: string, nodeBody: any, options: any = {}): Observable<MinimalNode> {
         const defaults = {
             include: ['path', 'properties', 'allowableOperations', 'permissions', 'definition']
@@ -120,12 +169,23 @@ export class NodesApiServiceImpl implements NodesApiService {
         );
     }
 
+    /**
+     * Moves a node to the trashcan.
+     * @param nodeId ID of the target node
+     * @param options Optional parameters supported by JS-API
+     * @returns Empty result that notifies when the deletion is complete
+     */
     deleteNode(nodeId: string, options: any = {}): Observable<any> {
         return from(this.nodesApi.deleteNode(nodeId, options)).pipe(
             catchError((err) => throwError(err))
         );
     }
 
+    /**
+     * Restores a node previously moved to the trashcan.
+     * @param nodeId ID of the node to restore
+     * @returns Details of the restored node
+     */
     restoreNode(nodeId: string): Observable<MinimalNode> {
         return from(this.trashcanApi.restoreDeletedNode(nodeId)).pipe(
             map(this.getEntryFromEntity),
@@ -133,11 +193,25 @@ export class NodesApiServiceImpl implements NodesApiService {
         );
     }
 
+    /**
+     * Get the metadata and the nodeType for a nodeId cleaned by the prefix.
+     * @param nodeId ID of the target node
+     * @returns Node metadata
+     */
     public getNodeMetadata(nodeId: string): Observable<NodeMetadata> {
         return from(this.nodesApi.getNode(nodeId))
             .pipe(map(this.cleanMetadataFromSemicolon));
     }
 
+    /**
+     * Create a new Node from form metadata.
+     * @param path Path to the node
+     * @param nodeType Node type
+     * @param name Node name
+     * @param nameSpace Namespace for properties
+     * @param data Property data to store in the node under namespace
+     * @returns The created node
+     */
     public createNodeMetadata(nodeType: string, nameSpace: any, data: any, path: string, name?: string): Observable<NodeEntry> {
         const properties = {};
         for (const key in data) {
@@ -149,6 +223,14 @@ export class NodesApiServiceImpl implements NodesApiService {
         return this.createNodeInsideRoot(name || this.generateUuid(), nodeType, properties, path);
     }
 
+    /**
+     * Create a new Node inside `-root-` folder
+     * @param name Node name
+     * @param nodeType Node type
+     * @param properties Node body properties
+     * @param path Path to the node
+     * @returns The created node
+     */
     public createNodeInsideRoot(name: string, nodeType: string, properties: any, path: string): Observable<NodeEntry> {
         const body = {
             name: name,
@@ -183,122 +265,5 @@ export class NodesApiServiceImpl implements NodesApiService {
 
         return new NodeMetadata(metadata, nodeEntry.entry.nodeType);
     }
-}
 
-@Injectable({
-    providedIn: 'root',
-    useClass: NodesApiServiceImpl
-})
-export abstract class NodesApiService {
-
-    /**
-     * Copy a node to destination node
-     *
-     * @param nodeId The id of the node to be copied
-     * @param targetParentId The id of the folder-node where the node have to be copied to
-     * @param name The new name for the copy that would be added on the destination folder
-     * @param opts Api options
-     */
-    public abstract copyNode(nodeId: string, targetParentId: string, name?: string, opts?: { include?: Array<string>; fields?: Array<string> }): Observable<NodeEntry>;
-
-    /**
-     * Moves a node to destination node.
-     *
-     * @param nodeId The id of the node to be moved
-     * @param targetParentId The id of the folder where the node will be moved
-     * @returns NodeEntry for the moved node
-     */
-    public abstract moveNode(nodeId: string, targetParentId: string): Observable<NodeEntry>;
-
-    public abstract unlockNode(nodeId: string, opts?: any): Observable<NodeEntry>;
-
-    public abstract requestDirectAccessUrl(nodeId: string): Observable<DirectAccessUrlEntry>;
-
-    public abstract getNodeEntry(nodeId: string, options: any): Observable<NodeEntry>;
-
-    /**
-     * Gets the stored information about a node.
-     * @param nodeId ID of the target node
-     * @param options Optional parameters supported by JS-API
-     * @returns Node information
-     */
-    public abstract getNode(nodeId: string, options?: any): Observable<MinimalNode>;
-
-    /**
-     * Gets the items contained in a folder node.
-     * @param nodeId ID of the target node
-     * @param options Optional parameters supported by JS-API
-     * @returns List of child items from the folder
-     */
-    public abstract getNodeChildren(nodeId: string, options?: any): Observable<NodePaging>;
-
-    /**
-     * Creates a new document node inside a folder.
-     * @param parentNodeId ID of the parent folder node
-     * @param nodeBody Data for the new node
-     * @param options Optional parameters supported by JS-API
-     * @returns Details of the new node
-     */
-    public abstract createNode(parentNodeId: string, nodeBody: any, options?: any): Observable<MinimalNode>;
-
-    /**
-     * Creates a new folder node inside a parent folder.
-     * @param parentNodeId ID of the parent folder node
-     * @param nodeBody Data for the new folder
-     * @param options Optional parameters supported by JS-API
-     * @returns Details of the new folder
-     */
-    public abstract createFolder(parentNodeId: string, nodeBody: any, options?: any): Observable<MinimalNode>;
-
-    /**
-     * Updates the information about a node.
-     * @param nodeId ID of the target node
-     * @param nodeBody New data for the node
-     * @param options Optional parameters supported by JS-API
-     * @returns Updated node information
-     */
-    public abstract updateNode(nodeId: string, nodeBody: any, options?: any): Observable<MinimalNode>;
-
-    /**
-     * Moves a node to the trashcan.
-     * @param nodeId ID of the target node
-     * @param options Optional parameters supported by JS-API
-     * @returns Empty result that notifies when the deletion is complete
-     */
-    public abstract deleteNode(nodeId: string, options?: any): Observable<any>;
-
-    /**
-     * Restores a node previously moved to the trashcan.
-     * @param nodeId ID of the node to restore
-     * @returns Details of the restored node
-     */
-    public abstract restoreNode(nodeId: string): Observable<MinimalNode>;
-
-    /**
-     * Get the metadata and the nodeType for a nodeId cleaned by the prefix.
-     * @param nodeId ID of the target node
-     * @returns Node metadata
-     */
-    public abstract getNodeMetadata(nodeId: string): Observable<NodeMetadata>;
-
-    /**
-     * Create a new Node from form metadata.
-     * @param path Path to the node
-     * @param nodeType Node type
-     * @param name Node name
-     * @param nameSpace Namespace for properties
-     * @param data Property data to store in the node under namespace
-     * @returns The created node
-     */
-    public abstract createNodeMetadata(nodeType: string, nameSpace: any, data: any, path: string, name?: string): Observable<NodeEntry>;
-
-    /**
-     * Create a new Node inside `-root-` folder
-     * @param name Node name
-     * @param nodeType Node type
-     * @param properties Node body properties
-     * @param path Path to the node
-     * @returns The created node
-     */
-    public abstract createNodeInsideRoot(name: string, nodeType: string, properties: any, path: string): Observable<NodeEntry>;
 }

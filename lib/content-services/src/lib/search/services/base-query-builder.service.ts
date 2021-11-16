@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-import { Injectable } from '@angular/core';
-import { Subject, Observable, from, ReplaySubject } from 'rxjs';
-import { AlfrescoApiService, AppConfigService } from '@alfresco/adf-core';
+import { Subject, Observable, ReplaySubject } from 'rxjs';
+import { AppConfigService } from '@alfresco/adf-core';
 import {
     QueryBody,
     RequestFacetFields,
@@ -25,8 +24,7 @@ import {
     RequestSortDefinitionInner,
     ResultSetPaging,
     RequestHighlight,
-    RequestScope,
-    SearchApi
+    RequestScope
 } from '@alfresco/js-api';
 import { SearchCategory } from '../models/search-category.interface';
 import { FilterQuery } from '../models/filter-query.interface';
@@ -38,16 +36,7 @@ import { FacetField } from '../models/facet-field.interface';
 import { FacetFieldBucket } from '../models/facet-field-bucket.interface';
 import { SearchForm } from '../models/search-form.interface';
 
-@Injectable({
-    providedIn: 'root'
-})
 export abstract class BaseQueryBuilderService {
-
-    _searchApi: SearchApi;
-    get searchApi(): SearchApi {
-        this._searchApi = this._searchApi ?? new SearchApi(this.alfrescoApiService.getInstance());
-        return this._searchApi;
-    }
 
     /*  Stream that emits the search configuration whenever the user change the search forms */
     configUpdated = new Subject<SearchConfiguration>();
@@ -92,7 +81,7 @@ export abstract class BaseQueryBuilderService {
     // TODO: to be supported in future iterations
     ranges: { [id: string]: SearchRange } = {};
 
-    constructor(protected appConfig: AppConfigService, protected alfrescoApiService: AlfrescoApiService) {
+    constructor(protected appConfig: AppConfigService) {
         this.resetToDefaults();
     }
 
@@ -296,8 +285,7 @@ export abstract class BaseQueryBuilderService {
         try {
             const query = queryBody ? queryBody : this.buildQuery();
             if (query) {
-                const resultSetPaging: ResultSetPaging = await this.searchApi.search(query);
-                this.executed.next(resultSetPaging);
+                await this.search(query).toPromise();
             }
         } catch (error) {
             this.error.next(error);
@@ -313,14 +301,12 @@ export abstract class BaseQueryBuilderService {
         }
     }
 
+    abstract _doSearch(queryBody: QueryBody): Observable<ResultSetPaging>;
+
     search(queryBody: QueryBody): Observable<ResultSetPaging> {
-        const promise = this.searchApi.search(queryBody);
-
-        promise.then((resultSetPaging) => {
-            this.executed.next(resultSetPaging);
-        });
-
-        return from(promise);
+        const obs = this._doSearch(queryBody);
+        obs.subscribe(this.executed);
+        return obs;
     }
 
     /**

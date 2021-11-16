@@ -16,14 +16,14 @@
  */
 
 import {
-    AlfrescoApiService, ContentService, LogService, PaginationModel
+    LogService, NodesApiService, PaginationModel
 } from '@alfresco/adf-core';
 
 import { Injectable } from '@angular/core';
-import { NodeEntry, NodePaging, NodesApi } from '@alfresco/js-api';
+import { NodeEntry, NodePaging } from '@alfresco/js-api';
 import { DocumentLoaderNode } from '../models/document-folder.model';
-import { Observable, from, throwError, forkJoin } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, from, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { DocumentListLoader } from '../interfaces/document-list-loader.interface';
 import { CustomResourcesService } from './custom-resources.service';
 
@@ -34,14 +34,7 @@ export class DocumentListService implements DocumentListLoader {
 
     static ROOT_ID = '-root-';
 
-    _nodesApi: NodesApi;
-    get nodes(): NodesApi {
-        this._nodesApi = this._nodesApi ?? new NodesApi(this.apiService.getInstance());
-        return this._nodesApi;
-    }
-
-    constructor(private contentService: ContentService,
-                private apiService: AlfrescoApiService,
+    constructor(private nodes: NodesApiService,
                 private logService: LogService,
                 private customResourcesService: CustomResourcesService) {
     }
@@ -63,7 +56,7 @@ export class DocumentListService implements DocumentListLoader {
      * @returns NodeEntry for the copied node
      */
     copyNode(nodeId: string, targetParentId: string): Observable<NodeEntry> {
-        return from(this.nodes.copyNode(nodeId, { targetParentId })).pipe(
+        return this.nodes.copyNode(nodeId, targetParentId).pipe(
             catchError((err) => this.handleError(err))
         );
     }
@@ -76,7 +69,7 @@ export class DocumentListService implements DocumentListLoader {
      * @returns NodeEntry for the moved node
      */
     moveNode(nodeId: string, targetParentId: string): Observable<NodeEntry> {
-        return from(this.nodes.moveNode(nodeId, { targetParentId })).pipe(
+        return this.nodes.moveNode(nodeId, targetParentId).pipe(
             catchError((err) => this.handleError(err))
         );
     }
@@ -121,7 +114,9 @@ export class DocumentListService implements DocumentListLoader {
             }
         }
 
-        return from(this.nodes.listNodeChildren(rootNodeId, params)).pipe(
+        return this.nodes.getNodeChildren(rootNodeId, params).pipe(
+            // tslint:disable-next-line: no-console
+            tap(console.log),
             catchError((err) => this.handleError(err))
         );
     }
@@ -141,7 +136,7 @@ export class DocumentListService implements DocumentListLoader {
             include: includeFieldsRequest
         };
 
-        return this.contentService.getNode(nodeId, opts);
+        return this.nodes.getNodeEntry(nodeId, opts);
     }
 
     /**
@@ -159,7 +154,9 @@ export class DocumentListService implements DocumentListLoader {
             include: includeFieldsRequest
         };
 
-        return from(this.nodes.getNode(nodeId, opts)).pipe(
+        return this.nodes.getNodeEntry(nodeId, opts).pipe(
+            // tslint:disable-next-line: no-console
+            tap(console.log),
             catchError((err) => this.handleError(err))
         );
     }
@@ -188,6 +185,7 @@ export class DocumentListService implements DocumentListLoader {
     }
 
     private retrieveDocumentNode(nodeId: string, pagination: PaginationModel, includeFields: string[], where?: string, orderBy?: string[]): Observable<DocumentLoaderNode> {
+        /*
         return forkJoin([
             this.getFolderNode(nodeId, includeFields),
             this.getFolder(null, {
@@ -196,8 +194,25 @@ export class DocumentListService implements DocumentListLoader {
                 orderBy: orderBy,
                 rootFolderId: nodeId,
                 where: where
-            }, includeFields)]).pipe(
-                map((results) => new DocumentLoaderNode(results[0], results[1]))
+            }, includeFields)
+        ]).pipe(
+            // tslint:disable-next-line: no-console
+            tap(console.log),
+            map(result => new DocumentLoaderNode(result[0], result[1]))
+        );*/
+        return this.getFolder(null, {
+            maxItems: pagination.maxItems,
+            skipCount: pagination.skipCount,
+            orderBy: orderBy,
+            rootFolderId: nodeId,
+            where: where
+        }, includeFields)
+            .pipe(
+                // tslint:disable-next-line: no-console
+                tap(console.log),
+                map(paging => new DocumentLoaderNode(paging.list.source, paging))
+            ).pipe(
+                catchError((err) => this.handleError(err))
             );
     }
 

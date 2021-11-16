@@ -28,6 +28,7 @@ export class JwtHelperService {
     static GIVEN_NAME = 'given_name';
     static USER_EMAIL = 'email';
     static USER_ACCESS_TOKEN = 'access_token';
+    static USER_ID_TOKEN = 'id_token';
     static REALM_ACCESS = 'realm_access';
     static RESOURCE_ACCESS = 'resource_access';
     static USER_PREFERRED_USERNAME = 'preferred_username';
@@ -91,6 +92,23 @@ export class JwtHelperService {
      */
     getAccessToken(): string {
         return this.storageService.getItem(JwtHelperService.USER_ACCESS_TOKEN);
+    }
+
+    /**
+     * Gets a named value from the user id token.
+     * @param key Key name of the field to retrieve
+     * @returns Value from the token
+     */
+     getValueFromLocalIdToken<T>(key: string): T {
+        return this.getValueFromToken(this.getIdToken(), key);
+    }
+
+    /**
+     * Gets id token
+     * @returns id token
+     */
+     getIdToken(): string {
+        return this.storageService.getItem(JwtHelperService.USER_ID_TOKEN);
     }
 
     /**

@@ -26,10 +26,9 @@ import { ContentMetadataConfigFactory } from './config/content-metadata-config.f
 import { PropertyDescriptorsService } from './property-descriptors.service';
 import { map, switchMap } from 'rxjs/operators';
 import { ContentTypePropertiesService } from './content-type-property.service';
-@Injectable({
-    providedIn: 'root'
-})
-export class ContentMetadataService {
+
+@Injectable()
+export class ContentMetadataServiceImpl implements ContentMetadataService {
 
     error = new Subject<{ statusCode: number, message: string }>();
 
@@ -86,14 +85,26 @@ export class ContentMetadataService {
         return groupedProperties;
     }
 
-    setTitleToNameIfNotSet(propertyGroups: OrganisedPropertyGroup[]): OrganisedPropertyGroup[] {
+    private setTitleToNameIfNotSet(propertyGroups: OrganisedPropertyGroup[]): OrganisedPropertyGroup[] {
         propertyGroups.map((propertyGroup) => {
             propertyGroup.title = propertyGroup.title || propertyGroup.name;
         });
         return propertyGroups;
     }
 
-    filterEmptyPreset(propertyGroups: OrganisedPropertyGroup[]): OrganisedPropertyGroup[]  {
+    private filterEmptyPreset(propertyGroups: OrganisedPropertyGroup[]): OrganisedPropertyGroup[]  {
         return propertyGroups.filter((props) => props.properties.length);
     }
+}
+
+@Injectable({
+    providedIn: 'root',
+    useClass: ContentMetadataServiceImpl
+})
+export abstract class ContentMetadataService {
+    error: Subject<{ statusCode: number, message: string }>;
+    abstract getBasicProperties(node: Node): Observable<CardViewItem[]>;
+    abstract getContentTypeProperty(node: Node): Observable<CardViewItem[]>;
+    abstract openConfirmDialog(changedProperties): Observable<any>;
+    abstract getGroupedProperties(node: Node, preset: string | PresetConfig): Observable<CardViewGroup[]>;
 }

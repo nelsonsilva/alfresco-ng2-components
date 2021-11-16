@@ -27,10 +27,11 @@ import {
     RenditionEntry,
     NodeEntry,
     VersionEntry,
-    SharedlinksApi, VersionsApi, NodesApi, ContentApi
+    SharedlinksApi, VersionsApi
 } from '@alfresco/js-api';
 import { BaseEvent } from '../../events';
 import { AlfrescoApiService } from '../../services/alfresco-api.service';
+import { NodesApiService } from '../../services/nodes-api.service';
 import { LogService } from '../../services/log.service';
 import { ViewerMoreActionsComponent } from './viewer-more-actions.component';
 import { ViewerOpenWithComponent } from './viewer-open-with.component';
@@ -292,23 +293,12 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         return this._versionsApi;
     }
 
-    _nodesApi: NodesApi;
-    get nodesApi(): NodesApi {
-        this._nodesApi = this._nodesApi ?? new NodesApi(this.apiService.getInstance());
-        return this._nodesApi;
-    }
-
-    _contentApi: ContentApi;
-    get contentApi(): ContentApi {
-        this._contentApi = this._contentApi ?? new ContentApi(this.apiService.getInstance());
-        return this._contentApi;
-    }
-
     constructor(private apiService: AlfrescoApiService,
                 private viewUtilService: ViewUtilService,
                 private logService: LogService,
                 private extensionService: AppExtensionService,
                 private contentService: ContentService,
+                private nodesApi: NodesApiService,
                 private uploadService: UploadService,
                 private el: ElementRef,
                 public dialog: MatDialog,
@@ -399,7 +389,7 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     private setupNode() {
-        this.nodesApi.getNode(this.nodeId, { include: ['allowableOperations'] }).then(
+        this.nodesApi.getNodeEntry(this.nodeId, { include: ['allowableOperations'] }).subscribe(
             (node: NodeEntry) => {
                 this.nodeEntry = node;
                 if (this.versionId) {
@@ -449,13 +439,13 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         this.scrollTop();
     }
 
-    private async setUpNodeFile(nodeData: Node, versionData?: Version): Promise<void> {
+    private async setUpNodeFile(nodeData: any, versionData?: Version): Promise<void> {
         this.readOnly = !this.contentService.hasAllowableOperations(nodeData, 'update');
 
         if (versionData && versionData.content) {
             this.mimeType = versionData.content.mimeType;
-        } else if (nodeData.content) {
-            this.mimeType = nodeData.content.mimeType;
+        } else if (nodeData.file_blob) {
+            this.mimeType = nodeData.file_blob.mimeType;
         }
 
         this.fileTitle = this.getDisplayName(versionData ? versionData.name : nodeData.name);
@@ -463,8 +453,8 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         const currentFileVersion = this.nodeEntry?.entry?.properties && this.nodeEntry.entry.properties['cm:versionLabel'] ?
             encodeURI(this.nodeEntry?.entry?.properties['cm:versionLabel']) : encodeURI('1.0');
 
-        this.urlFileContent = versionData ? this.contentApi.getVersionContentUrl(this.nodeId, versionData.id) :
-            this.contentApi.getContentUrl(this.nodeId);
+        this.urlFileContent = versionData ? this.contentService.getVersionContentUrl(this.nodeId, versionData.id) :
+            this.contentService.getContentUrl(this.nodeId);
         this.urlFileContent = this.cacheBusterNumber ? this.urlFileContent + '&' + currentFileVersion + '&' + this.cacheBusterNumber :
             this.urlFileContent + '&' + currentFileVersion;
 
@@ -501,7 +491,7 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         this.fileTitle = this.getDisplayName(details.entry.name);
         this.extension = this.getFileExtension(details.entry.name);
         this.fileName = details.entry.name;
-        this.urlFileContent = this.contentApi.getSharedLinkContentUrl(this.sharedLinkId, false);
+        this.urlFileContent = this.contentService.getSharedLinkContentUrl(this.sharedLinkId, false);
         this.viewerType = this.getViewerType(this.extension, this.mimeType);
 
         if (this.viewerType === 'unknown') {
@@ -515,8 +505,8 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         this.showRightSidebar = !this.showRightSidebar;
         if (this.showRightSidebar && this.nodeId) {
             this.nodesApi.getNode(this.nodeId, { include: ['allowableOperations'] })
-                .then((nodeEntry: NodeEntry) => {
-                    this.sidebarRightTemplateContext.node = nodeEntry.entry;
+                .subscribe((node: Node) => {
+                    this.sidebarRightTemplateContext.node = node;
                 });
         }
     }
@@ -525,8 +515,8 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
         this.showLeftSidebar = !this.showLeftSidebar;
         if (this.showRightSidebar && this.nodeId) {
             this.nodesApi.getNode(this.nodeId, { include: ['allowableOperations'] })
-                .then((nodeEntry: NodeEntry) => {
-                    this.sidebarLeftTemplateContext.node = nodeEntry.entry;
+                .subscribe((node: Node) => {
+                    this.sidebarLeftTemplateContext.node = node;
                 });
         }
     }
@@ -720,7 +710,7 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
             const rendition: RenditionEntry = await this.sharedLinksApi.getSharedLinkRendition(sharedId, 'pdf');
             if (rendition.entry.status.toString() === 'CREATED') {
                 this.viewerType = 'pdf';
-                this.urlFileContent = this.contentApi.getSharedLinkRenditionUrl(sharedId, 'pdf');
+                this.urlFileContent = this.contentService.getSharedLinkRenditionUrl(sharedId, 'pdf');
             }
         } catch (error) {
             this.logService.error(error);
@@ -728,7 +718,7 @@ export class ViewerComponent implements OnChanges, OnInit, OnDestroy {
                 const rendition: RenditionEntry = await this.sharedLinksApi.getSharedLinkRendition(sharedId, 'imgpreview');
                 if (rendition.entry.status.toString() === 'CREATED') {
                     this.viewerType = 'image';
-                    this.urlFileContent = this.contentApi.getSharedLinkRenditionUrl(sharedId, 'imgpreview');
+                    this.urlFileContent = this.contentService.getSharedLinkRenditionUrl(sharedId, 'imgpreview');
                 }
             } catch (error) {
                 this.logService.error(error);

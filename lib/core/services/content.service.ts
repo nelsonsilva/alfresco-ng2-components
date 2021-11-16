@@ -29,10 +29,8 @@ import { AllowableOperationsEnum } from '../models/allowable-operations.enum';
 import { DownloadService } from './download.service';
 import { ThumbnailService } from './thumbnail.service';
 
-@Injectable({
-    providedIn: 'root'
-})
-export class ContentService {
+@Injectable()
+export class ContentServiceImpl implements ContentService {
 
     folderCreated: Subject<FolderCreatedEvent> = new Subject<FolderCreatedEvent>();
     folderCreate: Subject<MinimalNode> = new Subject<MinimalNode>();
@@ -115,6 +113,31 @@ export class ContentService {
     }
 
     /**
+     * Gets a content URL for the given nodeId and versionId.
+     *
+     * @param  nodeId The ID of the document node.
+     * @param versionId The ID of the version.
+     * @param  [attachment=false] Retrieve content as an attachment for download.
+     * @param  [ticket] Custom ticket to use for authentication.
+     * @returns The URL address pointing to the content.
+     */
+    getVersionContentUrl(node: NodeEntry | string, versionId: string, attachment?: boolean, ticket?: string): string {
+        if (node) {
+            let nodeId: string;
+
+            if (typeof node === 'string') {
+                nodeId = node;
+            } else if (node.entry) {
+                nodeId = node.entry.id;
+            }
+
+            return this.contentApi.getVersionContentUrl(nodeId, versionId, attachment, ticket);
+        }
+
+        return null;
+    }
+
+    /**
      * Gets content for the given node.
      * @param nodeId ID of the target node
      * @returns Content data
@@ -124,16 +147,6 @@ export class ContentService {
             .pipe(
                 catchError((err: any) => this.handleError(err))
             );
-    }
-
-    /**
-     * Gets a Node via its node ID.
-     * @param nodeId ID of the target node
-     * @param opts Options supported by JS-API
-     * @returns Details of the folder
-     */
-    getNode(nodeId: string, opts?: any): Observable<NodeEntry> {
-        return from(this.nodesApi.getNode(nodeId, opts));
     }
 
     /**
@@ -207,8 +220,113 @@ export class ContentService {
         return hasAllowableOperations;
     }
 
+    /**
+     * Get content url for the given shared link id
+     *
+     * @param linkId - The ID of the shared link
+     * @param  [attachment=false] Retrieve content as an attachment for download
+     * @returns  The URL address pointing to the content.
+     */
+     getSharedLinkContentUrl(linkId: string, attachment?: boolean): string {
+        return this.contentApi.getSharedLinkContentUrl(linkId, attachment);
+    }
+
+    /**
+     * Gets the rendition content for file with shared link identifier sharedId.
+     *
+     * @param  sharedId - The identifier of a shared link to a file.
+     * @param  renditionId - The name of a thumbnail rendition, for example doclib, or pdf.
+     * @param [attachment=false] Retrieve content as an attachment for download
+     * @returns The URL address pointing to the content.
+     */
+     getSharedLinkRenditionUrl(sharedId: string, renditionId: string, attachment?: boolean): string {
+        return this.contentApi.getSharedLinkRenditionUrl(sharedId, renditionId, attachment);
+    }
+
     private handleError(error: any) {
         this.logService.error(error);
         return throwError(error || 'Server error');
     }
+}
+
+@Injectable({
+    providedIn: 'root',
+    useClass: ContentServiceImpl
+})
+export abstract class ContentService {
+
+    folderCreated: Subject<FolderCreatedEvent>;
+    folderCreate: Subject<MinimalNode>;
+    folderEdit: Subject<MinimalNode>;
+
+    /**
+     * Creates a trusted object URL from the Blob.
+     * WARNING: calling this method with untrusted user data exposes your application to XSS security risks!
+     * @param  blob Data to wrap into object URL
+     * @returns URL string
+     */
+     abstract createTrustedUrl(blob: Blob): string;
+
+    /**
+     * Gets a content URL for the given node.
+     * @param node Node or Node ID to get URL for.
+     * @param attachment Toggles whether to retrieve content as an attachment for download
+     * @param ticket Custom ticket to use for authentication
+     * @returns URL string or `null`
+     */
+     abstract getContentUrl(node: NodeEntry | string, attachment?: boolean, ticket?: string): string;
+
+    /**
+     * Gets a content URL for the given nodeId and versionId.
+     *
+     * @param  nodeId The ID of the document node.
+     * @param versionId The ID of the version.
+     * @param  [attachment=false] Retrieve content as an attachment for download.
+     * @param  [ticket] Custom ticket to use for authentication.
+     * @returns The URL address pointing to the content.
+     */
+     abstract getVersionContentUrl(node: NodeEntry | string, versionId: string, attachment?: boolean, ticket?: string): string;
+
+    /**
+     * Gets content for the given node.
+     * @param nodeId ID of the target node
+     * @returns Content data
+     */
+     abstract getNodeContent(nodeId: string): Observable<any>;
+
+    /**
+     * Checks if the user has permission on that node
+     * @param node Node to check permissions
+     * @param permission Required permission type
+     * @param userId Optional current user id will be taken by default
+     * @returns True if the user has the required permissions, false otherwise
+     */
+    abstract hasPermissions(node: Node, permission: PermissionsEnum | string, userId?: string): boolean;
+
+    /**
+     * Checks if the user has permissions on that node
+     * @param node Node to check allowableOperations
+     * @param allowableOperation Create, delete, update, updatePermissions, !create, !delete, !update, !updatePermissions
+     * @returns True if the user has the required permissions, false otherwise
+     */
+     abstract hasAllowableOperations(node: Node, allowableOperation: AllowableOperationsEnum | string): boolean;
+
+    /**
+     * Get content url for the given shared link id
+     *
+     * @param linkId - The ID of the shared link
+     * @param  [attachment=false] Retrieve content as an attachment for download
+     * @returns  The URL address pointing to the content.
+     */
+     abstract getSharedLinkContentUrl(linkId: string, attachment?: boolean): string;
+
+    /**
+     * Gets the rendition content for file with shared link identifier sharedId.
+     *
+     * @param  sharedId - The identifier of a shared link to a file.
+     * @param  renditionId - The name of a thumbnail rendition, for example doclib, or pdf.
+     * @param [attachment=false] Retrieve content as an attachment for download
+     * @returns The URL address pointing to the content.
+     */
+     abstract getSharedLinkRenditionUrl(sharedId: string, renditionId: string, attachment?: boolean): string;
 }

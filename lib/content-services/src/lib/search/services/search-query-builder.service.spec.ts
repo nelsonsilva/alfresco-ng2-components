@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { SearchQueryBuilderService } from './search-query-builder.service';
+import { SearchQueryBuilderService, SearchQueryBuilderServiceImpl } from './search-query-builder.service';
 import { SearchConfiguration } from '../models/search-configuration.interface';
 import { AlfrescoApiService, AppConfigService } from '@alfresco/adf-core';
 import { FacetField } from '../models/facet-field.interface';
@@ -48,7 +48,7 @@ describe('SearchQueryBuilder', () => {
             ]
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.categories = [];
         builder.filterQueries = [];
@@ -64,14 +64,14 @@ describe('SearchQueryBuilder', () => {
 
     it('should have empty user query by default', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         expect(builder.userQuery).toBe('');
     });
 
     it('should wrap user query with brackets', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         builder.userQuery = 'my query';
         expect(builder.userQuery).toEqual('(my query)');
     });
@@ -79,7 +79,7 @@ describe('SearchQueryBuilder', () => {
     it('should trim user query value', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         builder.userQuery = ' something   ';
         expect(builder.userQuery).toEqual('(something)');
     });
@@ -94,7 +94,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         expect(builder.categories.length).toBe(2);
         expect(builder.categories[0].id).toBe('cat1');
@@ -110,7 +110,7 @@ describe('SearchQueryBuilder', () => {
             ]
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         expect(builder.filterQueries.length).toBe(2);
         expect(builder.filterQueries[0].query).toBe('query1');
@@ -120,7 +120,7 @@ describe('SearchQueryBuilder', () => {
     it('should add new filter query', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
 
         builder.addFilterQuery('q1');
 
@@ -131,7 +131,7 @@ describe('SearchQueryBuilder', () => {
     it('should not add empty filter query', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
 
         builder.addFilterQuery(null);
         builder.addFilterQuery('');
@@ -142,7 +142,7 @@ describe('SearchQueryBuilder', () => {
     it('should not add duplicate filter query', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
 
         builder.addFilterQuery('q1');
         builder.addFilterQuery('q1');
@@ -155,7 +155,7 @@ describe('SearchQueryBuilder', () => {
     it('should remove filter query', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
 
         builder.addFilterQuery('q1');
         builder.addFilterQuery('q2');
@@ -169,7 +169,7 @@ describe('SearchQueryBuilder', () => {
     it('should not remove empty query', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         builder.addFilterQuery('q1');
         builder.addFilterQuery('q2');
         expect(builder.filterQueries.length).toBe(2);
@@ -191,7 +191,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         const query = builder.getFacetQuery('query2');
 
         expect(query.query).toBe('q2');
@@ -209,7 +209,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         const query1 = builder.getFacetQuery('');
         expect(query1).toBeNull();
@@ -230,7 +230,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         const field = builder.getFacetField('Size');
 
         expect(field.label).toBe('Size');
@@ -249,7 +249,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         const field = builder.getFacetField('Missing');
 
         expect(field).toBeFalsy();
@@ -266,7 +266,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         const field = builder.getFacetField('Label with spaces');
 
         expect(field.label).toBe('"Label with spaces"');
@@ -281,7 +281,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = null;
 
         const compiled = builder.buildQuery();
@@ -296,7 +296,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.queryFragments['cat1'] = 'cm:name:test';
 
@@ -313,7 +313,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.queryFragments['cat1'] = 'cm:name:test';
         builder.queryFragments['cat2'] = 'NOT cm:creator:System';
@@ -334,7 +334,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.queryFragments['cat1'] = 'cm:name:test';
 
@@ -352,7 +352,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.queryFragments['cat1'] = 'cm:name:test';
 
@@ -368,7 +368,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
         builder.addFilterQuery('query1');
 
@@ -391,7 +391,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
 
         const compiled = builder.buildQuery();
@@ -412,7 +412,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
 
         const compiled = builder.buildQuery();
@@ -456,7 +456,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
 
         const compiled = builder.buildQuery();
@@ -494,7 +494,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
 
         const compiled = builder.buildQuery();
@@ -542,7 +542,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
 
         const compiled = builder.buildQuery();
@@ -563,7 +563,7 @@ describe('SearchQueryBuilder', () => {
             ]
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         const sorting: any = { type: 'FIELD', field: 'cm:name', ascending: true };
         builder.sorting = [sorting];
 
@@ -580,7 +580,7 @@ describe('SearchQueryBuilder', () => {
             ]
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.queryFragments['cat1'] = 'cm:name:test';
         builder.paging = { maxItems: 5, skipCount: 5 };
 
@@ -598,7 +598,7 @@ describe('SearchQueryBuilder', () => {
             ]
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.userQuery = 'my query';
 
         builder.queryFragments['cat1'] = 'cm:name:test';
@@ -635,7 +635,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
 
         builder.addUserFacetBucket(field1, field1buckets[0]);
         builder.addUserFacetBucket(field1, field1buckets[1]);
@@ -658,7 +658,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.userQuery = 'my query';
 
         builder.queryFragments['cat1'] = 'cm:name:test';
@@ -677,7 +677,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         spyOn(builder, 'buildQuery').and.throwError('some error');
 
         builder.error.subscribe(() => {
@@ -695,7 +695,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         spyOn(builder, 'buildQuery').and.throwError('some error');
 
         builder.executed.subscribe((data) => {
@@ -710,7 +710,7 @@ describe('SearchQueryBuilder', () => {
     it('should include contain the path and allowableOperations by default', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         builder.userQuery = 'nuka cola quantum';
         const queryBody = builder.buildQuery();
 
@@ -724,7 +724,7 @@ describe('SearchQueryBuilder', () => {
         };
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(config), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(config), alfrescoApiService);
         builder.userQuery = 'nuka cola quantum';
         const queryBody = builder.buildQuery();
 
@@ -734,7 +734,7 @@ describe('SearchQueryBuilder', () => {
     it('should the query contain the pagination', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         builder.userQuery = 'nuka cola quantum';
         const mockPagination = {
             maxItems: 10,
@@ -749,7 +749,7 @@ describe('SearchQueryBuilder', () => {
     it('should the query contain the scope in case it is defined', () => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig({}), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig({}), alfrescoApiService);
         const mockScope = { locations: 'mock-location' };
         builder.userQuery = 'nuka cola quantum';
         builder.setScope(mockScope);
@@ -761,7 +761,7 @@ describe('SearchQueryBuilder', () => {
     it('should return empty if array of search config not found', (done) => {
         const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-        const builder = new SearchQueryBuilderService(buildConfig(null), alfrescoApiService);
+        const builder = new SearchQueryBuilderServiceImpl(buildConfig(null), alfrescoApiService);
         builder.searchForms.subscribe((forms) => {
             expect(forms).toEqual([]);
             done();
@@ -805,7 +805,7 @@ describe('SearchQueryBuilder', () => {
             ];
             const alfrescoApiService = TestBed.inject(AlfrescoApiService);
 
-            builder = new SearchQueryBuilderService(buildConfig(configs), alfrescoApiService);
+            builder = new SearchQueryBuilderServiceImpl(buildConfig(configs), alfrescoApiService);
         });
 
         it('should pick the default configuration from list', () => {

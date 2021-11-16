@@ -49,10 +49,10 @@ export class IdentityUserService implements IdentityUserServiceInterface {
      * @returns The user's details
      */
     getCurrentUserInfo(): IdentityUserModel {
-        const familyName = this.jwtHelperService.getValueFromLocalAccessToken<string>(JwtHelperService.FAMILY_NAME);
-        const givenName = this.jwtHelperService.getValueFromLocalAccessToken<string>(JwtHelperService.GIVEN_NAME);
-        const email = this.jwtHelperService.getValueFromLocalAccessToken<string>(JwtHelperService.USER_EMAIL);
-        const username = this.jwtHelperService.getValueFromLocalAccessToken<string>(JwtHelperService.USER_PREFERRED_USERNAME);
+        const familyName = this.jwtHelperService.getValueFromLocalIdToken<string>(JwtHelperService.FAMILY_NAME);
+        const givenName = this.jwtHelperService.getValueFromLocalIdToken<string>(JwtHelperService.GIVEN_NAME);
+        const email = this.jwtHelperService.getValueFromLocalIdToken<string>(JwtHelperService.USER_EMAIL);
+        const username = this.jwtHelperService.getValueFromLocalIdToken<string>(JwtHelperService.USER_PREFERRED_USERNAME);
         return { firstName: givenName, lastName: familyName, email: email, username: username };
     }
 

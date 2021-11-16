@@ -51,7 +51,7 @@ export class FileUploadingListRowComponent {
     }
 
     get versionNumber(): string {
-        return this.file.data.entry.properties['cm:versionLabel'];
+        return this.file.data.entry?.properties['cm:versionLabel'];
     }
 
     get mimeType(): string {
@@ -67,8 +67,8 @@ export class FileUploadingListRowComponent {
             !!this.file.data &&
             this.file.options &&
             this.file.options.newVersion &&
-            this.file.data.entry.properties &&
-            this.file.data.entry.properties['cm:versionLabel']
+            this.file.data.entry?.properties &&
+            this.file.data.entry?.properties['cm:versionLabel']
         );
     }
 }

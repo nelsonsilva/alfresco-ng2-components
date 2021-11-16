@@ -25,7 +25,12 @@ import { ClassesApi } from '@alfresco/js-api';
 @Injectable({
     providedIn: 'root'
 })
-export class PropertyDescriptorsService {
+export abstract class PropertyDescriptorsService {
+    abstract load(groupNames: string[]): Observable<PropertyGroupContainer>;
+}
+
+@Injectable()
+export class PropertyDescriptorsServiceImpl implements PropertyDescriptorsService {
 
     private _classesApi;
     get classesApi(): ClassesApi {

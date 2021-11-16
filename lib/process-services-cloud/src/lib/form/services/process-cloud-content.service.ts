@@ -74,7 +74,7 @@ export class ProcessCloudContentService {
     }
 
     downloadNodeContent(blob: Blob, fileName: string): void {
-        this.contentService.downloadBlob(blob, fileName);
+        this.downloadService.downloadBlob(blob, fileName);
     }
 
     async downloadFile(nodeId: string) {

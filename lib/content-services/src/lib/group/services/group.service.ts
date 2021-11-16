@@ -36,6 +36,7 @@ export class GroupService {
     }
 
     async listAllGroupMembershipsForPerson(personId: string, opts?: any, accumulator = []): Promise<GroupEntry[]> {
+        return Promise.resolve([]);
         const groupsPaginated = await this.groupsApi.listGroupMembershipsForPerson(personId, opts);
         accumulator = [...accumulator, ...groupsPaginated.list.entries];
         if (groupsPaginated.list.pagination.hasMoreItems) {

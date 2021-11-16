@@ -92,7 +92,7 @@ export class ImgViewerComponent implements AfterViewInit, OnChanges {
             zoomOnWheel: false,
             toggleDragModeOnDblclick: false,
             viewMode: 1,
-            checkCrossOrigin: false,
+            checkCrossOrigin: true,
             ready: () => {
                 this.updateCanvasContainer();
             }

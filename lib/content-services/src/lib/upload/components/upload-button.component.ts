@@ -17,7 +17,7 @@
 
 import {
     ContentService, EXTENDIBLE_COMPONENT, FileUtils,
-    LogService, NodeAllowableOperationSubject, TranslationService, UploadService, AllowableOperationsEnum
+    LogService, NodeAllowableOperationSubject, NodesApiService, TranslationService, UploadService, AllowableOperationsEnum
 } from '@alfresco/adf-core';
 import {
     Component, EventEmitter, forwardRef, Input,
@@ -69,6 +69,7 @@ export class UploadButtonComponent extends UploadBase implements OnInit, OnChang
 
     constructor(protected uploadService: UploadService,
                 private contentService: ContentService,
+                private nodesService: NodesApiService,
                 protected translationService: TranslationService,
                 protected logService: LogService,
                 protected ngZone: NgZone) {
@@ -134,8 +135,8 @@ export class UploadButtonComponent extends UploadBase implements OnInit, OnChang
                 include: ['allowableOperations']
             };
 
-            this.contentService.getNode(this.rootFolderId, opts).subscribe(
-                (res) => this.permissionValue.next(this.nodeHasPermission(res.entry, AllowableOperationsEnum.CREATE)),
+            this.nodesService.getNode(this.rootFolderId, opts).subscribe(
+                (res) => this.permissionValue.next(this.nodeHasPermission(res, AllowableOperationsEnum.CREATE)),
                 (error: { error: Error }) => {
                     if (error && error.error) {
                         this.error.emit({ error: error.error.message } as any);

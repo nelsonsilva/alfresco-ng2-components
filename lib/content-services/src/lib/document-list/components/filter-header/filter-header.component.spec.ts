@@ -53,7 +53,7 @@ describe('FilterHeaderComponent', () => {
         ],
         providers: [
             { provide: SearchService, useValue: searchMock },
-            { provide: SEARCH_QUERY_SERVICE_TOKEN, useClass: SearchHeaderQueryBuilderService },
+            { provide: SEARCH_QUERY_SERVICE_TOKEN, useExisting: SearchHeaderQueryBuilderService },
             { provide: DocumentListComponent, useValue: documentListMock },
             DataTableComponent
         ]

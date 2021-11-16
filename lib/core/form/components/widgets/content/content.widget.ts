@@ -16,6 +16,7 @@
  */
 
 import { ContentService } from '../../../../services/content.service';
+import { DownloadService } from '../../../../services/download.service';
 import { LogService } from '../../../../services/log.service';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -60,6 +61,7 @@ export class ContentWidgetComponent implements OnChanges {
     constructor(protected formService: FormService,
                 private logService: LogService,
                 private contentService: ContentService,
+                private downloadService: DownloadService,
                 private processContentService: ProcessContentService) {
     }
 
@@ -133,7 +135,7 @@ export class ContentWidgetComponent implements OnChanges {
      */
     download(content: ContentLinkModel): void {
         this.processContentService.getFileRawContent(content.id).subscribe(
-            (blob: Blob) => this.contentService.downloadBlob(blob, content.name),
+            (blob: Blob) => this.downloadService.downloadBlob(blob, content.name),
             (error) => {
                 this.error.emit(error);
             }

@@ -17,7 +17,7 @@
 
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+// import { map } from 'rxjs/operators';
 import { ContentService } from './content.service';
 import { AlfrescoApiService } from './alfresco-api.service';
 import { EcmUserModel } from '../models/ecm-user.model';
@@ -44,10 +44,9 @@ export class EcmUserService {
      * @returns User information
      */
     getUserInfo(userName: string): Observable<EcmUserModel> {
-        return from(this.peopleApi.getPerson(userName))
-            .pipe(
-                map((personEntry) => new EcmUserModel(personEntry.entry))
-            );
+        return from([new EcmUserModel({
+            id: userName
+        })]);
     }
 
     /**

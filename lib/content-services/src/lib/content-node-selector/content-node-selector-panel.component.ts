@@ -65,7 +65,7 @@ export const defaultValidation = () => true;
     host: { 'class': 'adf-content-node-selector-panel' },
     providers: [{
         provide: SEARCH_QUERY_SERVICE_TOKEN,
-        useClass: SearchQueryBuilderService
+        useExisting: SearchQueryBuilderService
     }]
 })
 export class ContentNodeSelectorPanelComponent implements OnInit, OnDestroy {

@@ -33,21 +33,20 @@ import { NodesApi, UploadApi, VersionsApi } from '@alfresco/js-api';
 
 const MIN_CANCELLABLE_FILE_SIZE = 1000000;
 const MAX_CANCELLABLE_FILE_PERCENTAGE = 50;
-
 @Injectable({
     providedIn: 'root'
 })
 export class UploadService {
-    private cache: { [key: string]: any } = {};
-    private totalComplete: number = 0;
-    private totalAborted: number = 0;
-    private totalError: number = 0;
-    private excludedFileList: string[] = [];
-    private excludedFoldersList: string[] = [];
-    private matchingOptions: any = null;
-    private folderMatchingOptions: any = null;
-    private abortedFile: string;
-    private isThumbnailGenerationEnabled: boolean;
+    protected cache: { [key: string]: any } = {};
+    protected totalComplete: number = 0;
+    protected totalAborted: number = 0;
+    protected totalError: number = 0;
+    protected excludedFileList: string[] = [];
+    protected excludedFoldersList: string[] = [];
+    protected matchingOptions: any = null;
+    protected folderMatchingOptions: any = null;
+    protected abortedFile: string;
+    protected isThumbnailGenerationEnabled: boolean;
 
     activeTask: Promise<any> = null;
     queue: FileModel[] = [];
@@ -64,27 +63,27 @@ export class UploadService {
     fileDeleted: Subject<string> = new Subject<string>();
 
     _uploadApi: UploadApi;
-    get uploadApi(): UploadApi {
+    private get uploadApi(): UploadApi {
         this._uploadApi = this._uploadApi ?? new UploadApi(this.apiService.getInstance());
         return this._uploadApi;
     }
 
     _nodesApi: NodesApi;
-    get nodesApi(): NodesApi {
+    private get nodesApi(): NodesApi {
         this._nodesApi = this._nodesApi ?? new NodesApi(this.apiService.getInstance());
         return this._nodesApi;
     }
 
     _versionsApi: VersionsApi;
-    get versionsApi(): VersionsApi {
+    private get versionsApi(): VersionsApi {
         this._versionsApi = this._versionsApi ?? new VersionsApi(this.apiService.getInstance());
         return this._versionsApi;
     }
 
     constructor(
         protected apiService: AlfrescoApiService,
-        private appConfigService: AppConfigService,
-        private discoveryApiService: DiscoveryApiService) {
+        protected appConfigService: AppConfigService,
+        protected discoveryApiService: DiscoveryApiService) {
 
         this.discoveryApiService.ecmProductInfo$.pipe(filter(info => !!info))
             .subscribe(({ status }) => {
@@ -321,7 +320,7 @@ export class UploadService {
         return promise;
     }
 
-    private onUploadStarting(file: FileModel): void {
+    protected onUploadStarting(file: FileModel): void {
         if (file) {
             file.status = FileUploadStatus.Starting;
             const event = new FileUploadEvent(file, FileUploadStatus.Starting);
@@ -330,7 +329,7 @@ export class UploadService {
         }
     }
 
-    private onUploadProgress(
+    protected onUploadProgress(
         file: FileModel,
         progress: FileUploadProgress
     ): void {
@@ -344,7 +343,7 @@ export class UploadService {
         }
     }
 
-    private onUploadError(file: FileModel, error: any): void {
+    protected onUploadError(file: FileModel, error: any): void {
         if (file) {
             file.errorCode = (error || {}).status;
             file.status = FileUploadStatus.Error;
@@ -365,7 +364,7 @@ export class UploadService {
         }
     }
 
-    private onUploadComplete(file: FileModel, data: any): void {
+    protected onUploadComplete(file: FileModel, data: any): void {
         if (file) {
             file.status = FileUploadStatus.Complete;
             file.data = data;
@@ -386,7 +385,7 @@ export class UploadService {
         }
     }
 
-    private onUploadAborted(file: FileModel): void {
+    protected onUploadAborted(file: FileModel): void {
         if (file) {
             file.status = FileUploadStatus.Aborted;
             this.totalAborted++;
@@ -397,7 +396,7 @@ export class UploadService {
         }
     }
 
-    private onUploadCancelled(file: FileModel): void {
+    protected onUploadCancelled(file: FileModel): void {
         if (file) {
             file.status = FileUploadStatus.Cancelled;
 
@@ -407,7 +406,7 @@ export class UploadService {
         }
     }
 
-    private onUploadDeleted(file: FileModel): void {
+    protected onUploadDeleted(file: FileModel): void {
         if (file) {
             file.status = FileUploadStatus.Deleted;
             this.totalComplete--;

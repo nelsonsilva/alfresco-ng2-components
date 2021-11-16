@@ -41,7 +41,7 @@ describe('SearchFormComponent', () => {
             ContentTestingModule
         ],
         providers: [
-            { provide: SEARCH_QUERY_SERVICE_TOKEN, useClass: SearchQueryBuilderService }
+            { provide: SEARCH_QUERY_SERVICE_TOKEN, useExisting: SearchQueryBuilderService }
         ]
     });
 

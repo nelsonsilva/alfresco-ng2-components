@@ -28,7 +28,7 @@ import { NodePaging, MinimalNode } from '@alfresco/js-api';
 @Component({
     selector: 'adf-filter-header',
     templateUrl: './filter-header.component.html',
-    providers: [{ provide: SEARCH_QUERY_SERVICE_TOKEN, useClass: SearchHeaderQueryBuilderService}]
+    providers: [{ provide: SEARCH_QUERY_SERVICE_TOKEN, useExisting: SearchHeaderQueryBuilderService}]
 })
 export class FilterHeaderComponent implements OnInit, OnChanges {
 

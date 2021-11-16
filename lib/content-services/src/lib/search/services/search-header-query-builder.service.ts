@@ -20,25 +20,24 @@ import { AlfrescoApiService, AppConfigService, NodesApiService, DataSorting } fr
 import { SearchConfiguration } from '../models/search-configuration.interface';
 import { BaseQueryBuilderService } from './base-query-builder.service';
 import { SearchCategory } from '../models/search-category.interface';
-import { MinimalNode, QueryBody } from '@alfresco/js-api';
+import { MinimalNode, QueryBody, ResultSetPaging, SearchApi } from '@alfresco/js-api';
 import { filter } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { SearchSortingDefinition } from '../models/search-sorting-definition.interface';
 import { FilterSearch } from '../models/filter-search.interface';
 
 @Injectable({
     providedIn: 'root'
 })
-export class SearchHeaderQueryBuilderService extends BaseQueryBuilderService {
+export abstract class SearchHeaderQueryBuilderService extends BaseQueryBuilderService {
 
     private customSources = ['-trashcan-', '-sharedlinks-', '-sites-', '-mysites-', '-favorites-', '-recent-', '-my-'];
 
     activeFilters: FilterSearch[] = [];
 
     constructor(appConfig: AppConfigService,
-                alfrescoApiService: AlfrescoApiService,
-                private nodeApiService: NodesApiService) {
-        super(appConfig, alfrescoApiService);
+                protected nodeApiService: NodesApiService) {
+        super(appConfig);
 
         this.updated.pipe(
             filter((query: QueryBody) => !!query)).subscribe(() => {
@@ -52,15 +51,6 @@ export class SearchHeaderQueryBuilderService extends BaseQueryBuilderService {
 
     loadConfiguration(): SearchConfiguration {
         return this.appConfig.get<SearchConfiguration>('search-headers');
-    }
-
-    setupCurrentPagination(maxItems: number, skipCount: number) {
-        if (!this.paging ||
-            (this.paging &&
-                this.paging.maxItems !== maxItems || this.paging.skipCount !== skipCount)) {
-            this.paging = { maxItems, skipCount };
-            this.execute();
-        }
     }
 
     setActiveFilter(columnActivated: string, filterValue: string) {
@@ -155,6 +145,40 @@ export class SearchHeaderQueryBuilderService extends BaseQueryBuilderService {
 
     getNodeIdForCustomSource(customSourceId: string): Observable<MinimalNode> {
         return this.nodeApiService.getNode(customSourceId);
+    }
+
+    setupCurrentPagination(maxItems: number, skipCount: number) {
+        if (!this.paging ||
+            (this.paging &&
+                this.paging.maxItems !== maxItems || this.paging.skipCount !== skipCount)) {
+            this.paging = { maxItems, skipCount };
+            this.execute();
+        }
+    }
+}
+
+@Injectable()
+export class SearchHeaderQueryBuilderServiceImpl extends SearchHeaderQueryBuilderService {
+
+    constructor(appConfig: AppConfigService,
+                protected nodeApiService: NodesApiService,
+                protected alfrescoApiService: AlfrescoApiService) {
+        super(appConfig, nodeApiService);
+
+        this.updated.pipe(
+            filter((query: QueryBody) => !!query)).subscribe(() => {
+            this.execute();
+        });
+    }
+
+    _searchApi: SearchApi;
+    get searchApi(): SearchApi {
+        this._searchApi = this._searchApi ?? new SearchApi(this.alfrescoApiService.getInstance());
+        return this._searchApi;
+    }
+
+    _doSearch(queryBody: QueryBody): Observable<ResultSetPaging> {
+        return from(this.searchApi.search(queryBody));
     }
 
 }
